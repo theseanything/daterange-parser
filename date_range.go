@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // DateRange ...
@@ -58,19 +59,19 @@ func NewParser() *Parser {
 	monthAnyPattern := strings.Join(monthPatterns, "|")
 
 	parser.constructors = []*Constructor{
-		&Constructor{
+		{
 			Pattern: fmt.Sprintf("(?i)(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})\\s*[–-]\\s*(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})", monthAnyPattern),
 			Handler: func(m []string) *DateRange {
 				return &DateRange{Start: parser.startDate(m[3], m[2], m[1]), End: parser.endDate(m[6], m[5], m[4])}
 			},
 		},
-		&Constructor{
+		{
 			Pattern: fmt.Sprintf("(?i)(\\d{1,2})\\s*(%[1]s)\\s*[–-]\\s*(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})", monthAnyPattern),
 			Handler: func(m []string) *DateRange {
 				return &DateRange{Start: parser.startDate(m[5], m[2], m[1]), End: parser.endDate(m[5], m[4], m[3])}
 			},
 		},
-		&Constructor{
+		{
 			Pattern: fmt.Sprintf("(?i)(\\d{1,2})\\s*[–-]\\s*(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})", monthAnyPattern),
 			Handler: func(m []string) *DateRange {
 				return &DateRange{Start: parser.startDate(m[4], m[3], m[1]), End: parser.endDate(m[4], m[3], m[2])}
@@ -85,9 +86,11 @@ func NewParser() *Parser {
 	return &parser
 }
 
-// Parse returns a date range from a given string
+// Parse returns a date range from a given string.
 func (p Parser) Parse(text string) (*DateRange, error) {
 	var m []string
+
+	text = strings.Map(sanitizeChars, text)
 
 	for _, c := range p.constructors {
 		m = c.Regexp.FindStringSubmatch(text)
@@ -98,6 +101,14 @@ func (p Parser) Parse(text string) (*DateRange, error) {
 	}
 
 	return nil, errors.New("could not parse date range")
+}
+
+func sanitizeChars(r rune) rune {
+	if unicode.IsSpace(r) {
+		return ' '
+	}
+
+	return r
 }
 
 func (p Parser) startDate(y, m, d string) time.Time {
