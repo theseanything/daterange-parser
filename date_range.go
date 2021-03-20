@@ -48,6 +48,13 @@ func NewParser() *Parser {
 		"dec(?:ember)?",
 	}
 
+	delimiterPatterns := []string{
+		"-",
+		"–",
+		"to",
+		"until",
+	}
+
 	monthRegexps := make([]*regexp.Regexp, len(monthPatterns))
 
 	for i, p := range monthPatterns {
@@ -57,22 +64,23 @@ func NewParser() *Parser {
 	parser.monthRegexps = monthRegexps
 
 	monthAnyPattern := strings.Join(monthPatterns, "|")
+	delimiterAnyPattern := strings.Join(delimiterPatterns, "|")
 
 	parser.constructors = []*Constructor{
 		{
-			Pattern: fmt.Sprintf("(?i)(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})\\s*[–-]\\s*(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})", monthAnyPattern),
+			Pattern: fmt.Sprintf("(?i)(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})\\s*(?:%[2]s)\\s*(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})", monthAnyPattern, delimiterAnyPattern),
 			Handler: func(m []string) *DateRange {
 				return &DateRange{Start: parser.startDate(m[3], m[2], m[1]), End: parser.endDate(m[6], m[5], m[4])}
 			},
 		},
 		{
-			Pattern: fmt.Sprintf("(?i)(\\d{1,2})\\s*(%[1]s)\\s*[–-]\\s*(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})", monthAnyPattern),
+			Pattern: fmt.Sprintf("(?i)(\\d{1,2})\\s*(%[1]s)\\s*(?:%[2]s)\\s*(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})", monthAnyPattern, delimiterAnyPattern),
 			Handler: func(m []string) *DateRange {
 				return &DateRange{Start: parser.startDate(m[5], m[2], m[1]), End: parser.endDate(m[5], m[4], m[3])}
 			},
 		},
 		{
-			Pattern: fmt.Sprintf("(?i)(\\d{1,2})\\s*[–-]\\s*(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})", monthAnyPattern),
+			Pattern: fmt.Sprintf("(?i)(\\d{1,2})\\s*(?:%[2]s)\\s*(\\d{1,2})\\s*(%[1]s)\\s*(\\d{4})", monthAnyPattern, delimiterAnyPattern),
 			Handler: func(m []string) *DateRange {
 				return &DateRange{Start: parser.startDate(m[4], m[3], m[1]), End: parser.endDate(m[4], m[3], m[2])}
 			},

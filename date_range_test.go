@@ -25,6 +25,8 @@ func TestParse(t *testing.T) {
 	}{
 		{"1 January 1900 - 31 December 2000", 1900, 1, 1, 2000, 12, 31},
 		{"9 December 2020 – 28 February 2021", 2020, 12, 9, 2021, 2, 28},
+		{"9 December 2020 until 28 February 2021", 2020, 12, 9, 2021, 2, 28},
+		{"9 December 2020 to 28 February 2021", 2020, 12, 9, 2021, 2, 28},
 		{" 1 January 1900 - 31 December 2000 ", 1900, 1, 1, 2000, 12, 31},
 		{" 1 January 1900\n -\n 31 December 2000 ", 1900, 1, 1, 2000, 12, 31},
 		{"1January1900-31December2000", 1900, 1, 1, 2000, 12, 31},
